@@ -6,6 +6,11 @@
  * important to do:
  * - clean up code
  * - proper documentation
+ * 
+ * GENERAL REMARKS
+ * - any to do will follow a certain structure, for easier understanding later
+ * - will likely use an ai or other model for that
+ * - why? to make sure a "to do" isn't just a random string, but something like "do this (like this)" later (in order to not mix notes and to-do's)
  */
 #include <iostream>
 #include <string>
@@ -14,8 +19,10 @@
 #include <fstream>
 #include <cstdlib>
 #define color_reset         "\x1b[0m"
-#define bold                "\x1b[1m"
+#define bold                "\x1B[1m"
+#define reset_bold          "\x1B[22m"
 #define cursive             "\x1b[3m"
+#define reset_cursive       "\x1b[23m"
 
 /* reference for colors and indentation for terminal outputs, see ANSI color codes 
 
@@ -131,11 +138,58 @@ std::string terminalColor(color c, layer l, brightness b)
     return out;
 }
 
+/**
+ * @brief Main function
+ * @param argc Number of passed Arguments
+ * @param argv The arguments (argv[0] holds the name of the program)
+ */
 int main(int argc, char** argv)
 {
-    /**
+    // puts out name of program
+    std::cout << std::endl << bold                  << terminalColor(cyan, foreground, bright)  << "starting: " << terminalColor(blue,foreground,bright) << reset_bold << argv[0] << terminalColor(cyan, foreground, bright) << ".exe" << color_reset;
+    // notes for usage to user
+    std::cout << std::endl                          << terminalColor(black,foreground,normal)   << terminalColor(white,background,normal)           << cursive     << bold << "\n\n\tNotes for usage:\n\n";
+    std::cout << reset_cursive                      << terminalColor(red,foreground,normal)     << bold << "\tAvailable commands are: \n"           << color_reset << std::endl;
+    std::cout << std::endl << "\t\tadd\t"           << terminalColor(black,foreground,normal)   << " (in order to add new \"to do\" entries)"       << color_reset << std::endl;
+    std::cout << std::endl << "\t\tedit\t"          << terminalColor(black,foreground,normal)   << " (in order to edit some \"to do\" entries)"     << color_reset << std::endl;
+    std::cout << std::endl << "\t\tdelete\t"        << terminalColor(black,foreground,normal)   << " (in order to delete some \"to do\" entries)"   << color_reset << std::endl;
+    std::cout << color_reset;
+    // NEXT STEP IMPLEMENT THESE THREE FEATURES FIRST YOU LACK OF ATTENTION SPAN / MOTIVATON / DEDICATION
+
+    
+    // Edit To-Do's
+    // Add notes to To-Do's
+    // Create/Save some To-Do's
+    //// if no to-do's exist, ask to add the first
+    std::ifstream existing("current.todo");
+    if(existing.eof()) {
+        std::cout << terminalColor(green, background, normal) << std::endl << "seems like there's nothing to do left for now!";// this could indicate initial startup or new setup, but also: an error could've occured
+    }
+    else {
+        std::cout << terminalColor(yellow, background, normal) << std::endl << "seems like there's some stuff left over!";// this could indicate initial startup or new setup, but also: an error could've occured
+    }
+    std::cout << terminalColor(white, foreground, normal) << std::endl << "what do you want to do? ";
+    std::string response;
+    std::cin >> response;
+    // consider: spelling mistakes could happen
+    
+    // consider: entered to-do's will be linguistically adjusted for later ease of reading/understanding
+    // include: a feedback like "non interpretable"
+    
+
+    // Finish/Restore some old To-Do's
+    //// for documentation of finished projects
+    // Further assistment tools?
+
+    std::cout << color_reset;
+    return 0;
+}
+//
+// leftover garbage. works but isnt't pretty
+//
+/**
      * PLAYING AROUND WITH ANSI COLOURS
-     */
+     
     int reset = 13;// reset line background after 13 ~w~
     std::cout << color_reset << std::endl;
     // add some crazy, spectacular animations next
@@ -189,7 +243,7 @@ int main(int argc, char** argv)
     std::cout << color_reset << std::endl << std::endl << std::endl;
 
 
-    // Load current To-Do's
+    
     // Fake load time
     std::cout << terminalColor(magenta,foreground,normal) << "Fetching current to-do list.\r";
     std::this_thread::sleep_for(std::chrono::milliseconds(1300));
@@ -198,43 +252,5 @@ int main(int argc, char** argv)
     std::cout << terminalColor(magenta,foreground,normal) << "Fetching current to-do list..." << std::endl << std::endl;
     std::this_thread::sleep_for(std::chrono::milliseconds(1300));
 
-    /**
      * STOP PLAYING AROUND WITH ANSI COLOURS
      */
-
-    std::cout << terminalColor(black,foreground,normal) << terminalColor(white,background,normal) << std::endl << "Notes for usage:" << std::endl;
-    std::cout << "Create, Edit, Add Notes...";
-
-    
-    // Edit To-Do's
-    // Add notes to To-Do's
-    // Create/Save some To-Do's
-    //// if no to-do's exist, ask to add the first
-    std::ifstream existing("current.todo");
-    if(existing.eof()) {
-        std::cout << terminalColor(green, background, normal) << std::endl << "seems like there's nothing to do left for now!";// this could indicate initial startup or new setup, but also: an error could've occured
-        std::cout << terminalColor(white, foreground, normal) << std::endl << "what's your intent? ";
-    }
-    else {
-        std::cout << terminalColor(green, background, normal) << std::endl << "seems like there's some stuff left over!";// this could indicate initial startup or new setup, but also: an error could've occured
-        std::cout << terminalColor(white, foreground, normal) << std::endl << "what's your intent? ";
-    }
-    std::string response;
-    std::cin >> response;
-    // consider: spelling mistakes could happen
-    if(response != "nothing") {
-        std::cout << "i cannot do that yet";
-    }
-    else {
-        std::cout << "we can do that!";
-    }
-
-    
-
-    // Finish/Restore some old To-Do's
-    //// for documentation of finished projects
-    // Further assistment tools?
-
-    std::cout << color_reset;
-    return 0;
-}
