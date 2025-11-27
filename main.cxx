@@ -97,25 +97,23 @@ void project () {
 }
 
 
-void userFeedback(std::vector<std::string> user)
+void userFeedback(std::string in)
 {
     // no feedback yet
     feed = false;
     // but we're prepared
-    std::string input;
-    std::cin >> input;
-    user.push_back(input);
+    std::cin >> in;
     // there has been feedback, so let's reset the timer
     feed = true;
-    // let's wait for more feedback?
-    userFeedback(user);
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    userFeedback(in);
 }
 
 /**
  * @brief waits for a specified amount of time after feedback has been received
  * @param time in seconds
  */
-void waitForFeedback(int time)
+void waitForMore(int time)
 {
     // we wait for some unspecified time, but at least three please
     if(time>2) 
@@ -124,7 +122,7 @@ void waitForFeedback(int time)
     // there has been feedback since the last call for wait?
     if(feed) {
         std::cout << terminalColor(cyan,foreground,bright) << "\n\treset timer" << terminal_reset;// to be removed
-        waitForFeedback(time); // we obviously have to wait again
+        waitForMore(time); // we obviously have to wait again
     }
     // we're waiting to evaluate the input. let's inform the user
     else {
@@ -133,11 +131,11 @@ void waitForFeedback(int time)
             // give the user a chance to intersect
             if(feed) {
                 std::cout << terminalColor(cyan,foreground,bright) << "\n\treset timer" << terminal_reset;// to be removed
-                waitForFeedback(time); // we obviously have to wait again
+                waitForMore(time); // we obviously have to wait again
             }
             // last chance. we're counting down
             else{
-                std::cout << "\rtime left: " << x << " seconds" << std::endl;
+                std::cout << "time left: " << x << " seconds" << std::endl;
                 std::this_thread::sleep_for(std::chrono::seconds(1));
             } 
         }
@@ -171,14 +169,27 @@ int main(int argc, char** argv)
     std::vector<std::string> user;
     
     // to do: manage multiple user prompts!
-    // userFeedback(user);
-    // waitForFeedback(7);
+    // 
+    // 
+    // but: my mind is foggy currently, so let's do something more practical first!!!
+    //
+    //
+    // okay: i suck, but: we're waiting and returning for multiple user inputs. but:: only the first gets recognized! why? this is a to do for tomorrow!!!
 
     std::string cli;
     std::cin >> cli;
     user.push_back(cli);
 
-    
+    std::string newcli;
+    std::thread u(userFeedback,newcli);
+    user.push_back(newcli);
+    if(newcli!=cli) 
+    {
+        waitForMore(7);
+    }
+
+    // nun left to wait for
+    u.detach();
 
     
     
