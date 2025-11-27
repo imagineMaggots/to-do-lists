@@ -57,6 +57,9 @@ void interpret(std::vector<std::string> user)
     for(std::string value : user)
     {
         std::cout << "\nread: "<< value;
+    }
+    for(std::string value : user)
+    {
         // gets split into seperate words
         std::copy(
             std::sregex_token_iterator(value.begin(),value.end(),word,0),
@@ -112,7 +115,7 @@ void userFeedback(std::vector<std::string> user)
  * @brief waits for a specified amount of time after feedback has been received
  * @param time in seconds
  */
-void waitForFeedback(int time, std::vector<std::string> user)
+void waitForFeedback(int time)
 {
     // we wait for some unspecified time, but at least three please
     if(time>2) 
@@ -121,7 +124,7 @@ void waitForFeedback(int time, std::vector<std::string> user)
     // there has been feedback since the last call for wait?
     if(feed) {
         std::cout << terminalColor(cyan,foreground,bright) << "\n\treset timer" << terminal_reset;// to be removed
-        userFeedback(user); // we obviously have to wait again
+        waitForFeedback(time); // we obviously have to wait again
     }
     // we're waiting to evaluate the input. let's inform the user
     else {
@@ -130,7 +133,7 @@ void waitForFeedback(int time, std::vector<std::string> user)
             // give the user a chance to intersect
             if(feed) {
                 std::cout << terminalColor(cyan,foreground,bright) << "\n\treset timer" << terminal_reset;// to be removed
-                userFeedback(user); // we obviously have to wait again
+                waitForFeedback(time); // we obviously have to wait again
             }
             // last chance. we're counting down
             else{
@@ -144,7 +147,10 @@ void waitForFeedback(int time, std::vector<std::string> user)
 }
 
 
-
+void wait (int second)
+{
+    std::this_thread::sleep_for(std::chrono::seconds(second));
+}
 
 
 int main(int argc, char** argv)
@@ -164,11 +170,13 @@ int main(int argc, char** argv)
     std::cout << terminal_reset << "Whats next? ";
     std::vector<std::string> user;
     
-    // bad practise, but works
-    std::thread u (userFeedback,user);
-    std::thread t (waitForFeedback,7,user);
-    u.detach();
-    t.join();
+    // to do: manage multiple user prompts!
+    // userFeedback(user);
+    // waitForFeedback(7);
+
+    std::string cli;
+    std::cin >> cli;
+    user.push_back(cli);
 
     
 
