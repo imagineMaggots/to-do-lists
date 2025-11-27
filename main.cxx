@@ -29,6 +29,15 @@
 
 class projects {
     public:
+        enum timePeriod {
+            seconds,
+            minutes,
+            hours,
+            days,
+            weeks,
+            months,
+            years,
+        };
         std::string alias;
         int updateTime ()
         {
@@ -36,30 +45,35 @@ class projects {
             auto nows = std::chrono::time_point_cast<std::chrono::seconds>(now);
 
             // expand the stored time to seconds 
-            
+            if(getTimePeriod)
 
-            std::cout << "it's been " << getTime() << getPeriod() << " since you started working on this" << std::endl;
+            std::cout << "it's been " << getTime() << getTimePeriod() << " since you started working on this" << std::endl;
 
             return 0;
         }
-        // stores the time in seconds
+        // stores the time
         int setTime (unsigned long long value)
         {
             this->time=value;
             std::cout << terminalColor(yellow,foreground,bright) << "updated some time" << terminal_reset;
             return 0;
         }
-        // returns the passed time in seconds
+        // returns the passed time
         unsigned long long getTime ()
         {
             std::cout << terminalColor(yellow,foreground,bright) << "retrieved some time" << terminal_reset;
             return this->time;
         }
-        int setPeriod (std::string p)
+        int setPeriod (timePeriod tp)
         {
+            switch (tp)
+            {
+                case 0:
+                    break;
+            }
             this->period = p;
         }
-        std::string getPeriod ()
+        std::string getTimePeriod ()
         {
             return this->period;
         }
