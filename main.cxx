@@ -1,301 +1,117 @@
 /**
- * a simple to-do list program.
+ * progress tracking system
  * 
  * will hopefully turn out very pretty in the terminal
  * 
  * important to do:
  * - clean up code
  * - proper documentation
+ * - sewerslide
  * 
  * GENERAL REMARKS
  * - any to do will follow a certain structure, for easier understanding later
  * - will likely use an ai or other model for that
  * - why? to make sure a "to do" isn't just a random string, but something like "do this (like this)" later (in order to not mix notes and to-do's)
  */
-#include <iostream>
-#include <string>
+#include "colors.cxx"
 #include <regex>
+#include <time.h>
 #include <chrono>
 #include <thread>
 #include <fstream>
 #include <cstdlib>
-#define color_reset         "\x1b[0m"
+#define terminal_reset      "\x1b[0m"
 #define bold                "\x1B[1m"
 #define reset_bold          "\x1B[22m"
 #define cursive             "\x1b[3m"
 #define reset_cursive       "\x1b[23m"
 
-/* reference for colors and indentation for terminal outputs, see ANSI color codes 
 
-// foreground
-#define black               "\x1b[30m"
-#define red                 "\x1b[31m"
-#define green               "\x1b[32m"
-#define yellow              "\x1b[33m"
-#define blue                "\x1b[34m"
-#define magenta             "\x1b[35m"
-#define cyan                "\x1b[36m"
-#define white               "\x1b[37m"
-// background
-#define background_black    "\x1b[40m"
-#define background_red      "\x1b[41m"
-#define background_green    "\x1b[42m"
-#define background_yellow   "\x1b[43m"
-#define background_blue     "\x1b[44m"
-#define background_magenta  "\x1b[45m"
-#define background_cyan     "\x1b[46m"
-#define background_white    "\x1b[47m"
-// foreground bright, 90s
-// background bright, 100s
-*/
+class projects {
+    public:
+        std::string alias;
+        int updateTime ()
+        {
+            auto now = std::chrono::system_clock::now();
+            auto nows = std::chrono::time_point_cast<std::chrono::seconds>(now);
 
-enum layer {
-    foreground, 
-    background,
-};
-enum color {
-    black, 
-    red,
-    green,
-    yellow,
-    blue,
-    magenta,
-    cyan,
-    white,
-};
-enum brightness {
-    normal,
-    bright,
-};
-enum commands {
-    add,
-    edit,
-    remov,
+            // expand the stored time to seconds 
+            
+
+            std::cout << "it's been " << getTime() << getPeriod() << " since you started working on this" << std::endl;
+
+            return 0;
+        }
+        // stores the time in seconds
+        int setTime (unsigned long long value)
+        {
+            this->time=value;
+            std::cout << terminalColor(yellow,foreground,bright) << "updated some time" << terminal_reset;
+            return 0;
+        }
+        // returns the passed time in seconds
+        unsigned long long getTime ()
+        {
+            std::cout << terminalColor(yellow,foreground,bright) << "retrieved some time" << terminal_reset;
+            return this->time;
+        }
+        int setPeriod (std::string p)
+        {
+            this->period = p;
+        }
+        std::string getPeriod ()
+        {
+            return this->period;
+        }
+    private:
+        std::string name;
+        unsigned long long time;// how much time has passed since the beginning. will hold the longest time spans only, i.e. days over hours, hours over minutes, ... to not store "20491203948414280984" seconds but the years passed (in this case. i doubt i'll be living for 20491203948414280984 more seconds though)
+        std::string period;
 };
 
-/**
- * @brief Change the color of the terminal output
- * @param c Any ANSI color
- * @param l Foreground or Background
- * @param b Normal or bright color
- */
-std::string terminalColor(color c, layer l, brightness b)
-{
-    std::string out = "\x1b[";
+int project () {
+    std::cout << cursive << terminalColor(cyan,foreground,normal) << "\nproject editing\n" << reset_cursive;
+    std::cout << terminalColor(blue,foreground,normal) << "do you want to add, edit or finish a project?\n" << terminal_reset;
 
-    switch(l)
+    std::string user;
+    std::cin >> user;
+
+    if(user == "add")
     {
-        case foreground:
-            switch (b)
-            {
-                case normal:
-                    out.append("3");
-                    break;
-                case bright:
-                    out.append("9");
-                    break;
-                default:
-                    break;
-            }
-            break;
-        case background:
-            switch (b)
-            {
-                case normal:
-                    out.append("4");
-                    break;
-                case bright:
-                    out.append("10");
-                    break;
-                default:
-                    break;
-            }
-            break;
+        std::cout << "\tcool! you got a name for it already?";
     }
-
-    switch(c)
+    else if (user == "edit")
     {
-        case black:
-            out.append("0");
-            break;
-        case red:
-            out.append("1");
-            break;
-        case green:
-            out.append("2");
-            break;
-        case yellow:
-            out.append("3");
-            break;
-        case blue:
-            out.append("4");
-            break;
-        case magenta:
-            out.append("5");
-            break;
-        case cyan:
-            out.append("6");
-            break;
-        case white:
-            out.append("7");
-            break;
+        std::cout << "\tcool! which one?";
     }
-    out.append("m");
-    return out;
-}
-
-/**
- * @brief Tries to match the input word to the closest available command
- * @param word input word
- * @return the closest command (that still makes sense)
- */
-std::string normalize(std::string word)
-{
-    /*
-    // what additional endings could a word have?
-    //
-    // from: https://www.scholastic.com/content/dam/teachers/lesson-plans/migrated-files-in-body/prefixes_suffixes.pdf
-    enum suffixes {
-        able, ible,// doable, flexible
-        al, ial,// mental, denial
-        ed,// ended
-        en,// proven
-        er,// bigger (comparative)
-        er_1,// worker (one who does something)
-        est,// largest (superlative)
-        ful,// faithful
-        ic,// pathetic
-        ing,// doing
-        ion, tion, ation, ition,// action, companion, concatation, partition
-        ity, ty,// pity, witty
-        ive, ative, itive,// 
-    };
-    // what can we add in front of a word?
-    enum prefixes {
-
-    };
-    */
-    return "unfinished";
-}
-
-
-
-/**
- * @brief Main function
- * @param argc Number of passed Arguments
- * @param argv The arguments (argv[0] holds the name of the program)
- */
-int main(int argc, char** argv)
-{
-    // puts out name of program
-    std::cout << std::endl << bold                  << terminalColor(cyan, foreground, bright)  << "starting: " << terminalColor(blue,foreground,bright) << reset_bold << argv[0] << terminalColor(cyan, foreground, bright) << ".exe" << color_reset;
-    // notes for usage to user
-    std::cout << std::endl                          << terminalColor(black,foreground,normal)   << terminalColor(white,background,normal)           << cursive     << bold << "\n\n\tNotes for usage:\n\n";
-    std::cout << reset_cursive                      << terminalColor(red,foreground,normal)     << bold << "\tAvailable commands are: \n"           << color_reset << std::endl;
-    std::cout << std::endl << "\t\tadd\t"           << terminalColor(black,foreground,normal)   << " (in order to add new \"to do\" entries)"       << color_reset << std::endl;
-    std::cout << std::endl << "\t\tedit\t"          << terminalColor(black,foreground,normal)   << " (in order to edit some \"to do\" entries)"     << color_reset << std::endl;
-    std::cout << std::endl << "\t\tremove\t"        << terminalColor(black,foreground,normal)   << " (in order to delete some \"to do\" entries)"   << color_reset << std::endl;
-    std::cout << color_reset;
-    // NEXT STEP IMPLEMENT THESE THREE FEATURES FIRST YOU LACK OF ATTENTION SPAN / MOTIVATON / DEDICATION
-
-    
-    // Edit To-Do's
-    // Add notes to To-Do's
-    // Create/Save some To-Do's
-    //// if no to-do's exist, ask to add the first
-    std::ifstream existing("current.todo");
-    if(existing.eof()) {
-        std::cout << terminalColor(green, background, normal) << std::endl << "seems like there's nothing to do left for now!";// this could indicate initial startup or new setup, but also: an error could've occured
+    else 
+    {
+        std::cout << "\tyou actually finished something?";
     }
-    else {
-        std::cout << terminalColor(yellow, background, normal) << std::endl << "seems like there's some stuff left over!";// this could indicate initial startup or new setup, but also: an error could've occured
-    }
-    std::cout << terminalColor(black, foreground, normal) << terminalColor(white, background, normal)  << "\nwhat do you want to do? " << terminalColor(cyan, foreground, normal);
-    std::string response;
-    std::cin >> response;
 
-    std::string res = normalize(response);
-    // consider: spelling mistakes could happen
-
-    
-    // consider: entered to-do's will be linguistically adjusted for later ease of reading/understanding
-    // include: a feedback like "non interpretable"
-    
-
-    // Finish/Restore some old To-Do's
-    //// for documentation of finished projects
-    // Further assistment tools?
-
-    std::cout << color_reset;
     return 0;
 }
-//
-// leftover garbage. works but isnt't pretty
-//
-/**
-     * PLAYING AROUND WITH ANSI COLOURS
-     
-    int reset = 13;// reset line background after 13 ~w~
-    std::cout << color_reset << std::endl;
-    // add some crazy, spectacular animations next
-    for(int x = 0; x < 13000; x++)
-    {   
-        switch(x%2)
-        {
-            case 0:
-                std::cout << terminalColor(black,foreground,normal);
-                break;
-            case 1:
-                std::cout << terminalColor(white,foreground,normal);
-                break;
-        }
-        switch(x%7)
-        {
-            case 0:
-                std::cout << terminalColor(red,background,normal);
-                std::cout << std:: flush << " ~w~  ~w~ ";
-                break;
-            case 1:
-                std::cout << terminalColor(yellow,background,normal);
-                std::cout << std:: flush << " ~w~  ~w~ ";
-                break;
-            case 2:
-                std::cout << terminalColor(green,background,normal);
-                std::cout << std:: flush << " ~w~  ~w~ ";
-                break;
-            case 3:
-                std::cout << terminalColor(cyan,background,normal);
-                std::cout << std:: flush << " ~w~  ~w~ ";
-                break;
-            case 4:
-                std::cout << terminalColor(blue,background,normal);
-                std::cout << std:: flush << " ~w~  ~w~ ";
-                break;
-            case 5:
-                std::cout << terminalColor(magenta,background,normal);
-                std::cout << std:: flush << " ~w~  ~w~ ";
-                break;
-            case 6:
-                std::cout << terminalColor(white,background,bright);
-                std::cout << std:: flush << " ~w~  ~w~ ";
-                break;
-        }
-        std::this_thread::sleep_for(std::chrono::microseconds(130));
-        if(x%reset==0) std::cout << std::endl;
-        
+
+int main(int argc, char** argv)
+{
+    std::cout << terminal_reset << "starting" << terminalColor(cyan,foreground,normal) << " " << argv[0] << terminalColor(black,foreground,bright) << ".exe\n" << terminal_reset << std::endl;
+
+    // try to load existing to do list, if it exists
+    std::ifstream existing("current.todo");
+    if(existing.eof()) {
+        std::cout << terminalColor(green, background, normal) << std::endl << "Nothing left to do! ";// this could indicate initial startup or new setup, but also: an error could've occured
     }
+    else {
+        std::cout << terminalColor(yellow, foreground, normal) << std::endl << "Your current projects: \n";// this could indicate initial startup or new setup, but also: an error could've occured
+    }
+
+    std::cout << terminal_reset << "Whats next? ";
+    std::string user;
+    std::cin >> user;
+
     
-    std::cout << color_reset << std::endl << std::endl << std::endl;
 
 
-    
-    // Fake load time
-    std::cout << terminalColor(magenta,foreground,normal) << "Fetching current to-do list.\r";
-    std::this_thread::sleep_for(std::chrono::milliseconds(1300));
-    std::cout << terminalColor(red,foreground,normal)  << "Fetching current to-do list..\r";
-    std::this_thread::sleep_for(std::chrono::milliseconds(1300));
-    std::cout << terminalColor(magenta,foreground,normal) << "Fetching current to-do list..." << std::endl << std::endl;
-    std::this_thread::sleep_for(std::chrono::milliseconds(1300));
-
-     * STOP PLAYING AROUND WITH ANSI COLOURS
-     */
+    std::cout << terminal_reset;
+    return 0;
+}
