@@ -15,6 +15,7 @@
  */
 #include "colors.cxx"
 #include <regex>
+#include <iterator>
 #include <time.h>
 #include <chrono>
 #include <thread>
@@ -26,64 +27,48 @@
 #define cursive             "\x1b[3m"
 #define reset_cursive       "\x1b[23m"
 
+// determines if a thread is expecting to be stopped at some point
+bool waiting = false;
+// knows if a thread is running
+bool running = false;
 
-class projects {
-    public:
-        enum timePeriod {
-            seconds,
-            minutes,
-            hours,
-            days,
-            weeks,
-            months,
-            years,
-        };
-        std::string alias;
-        int updateTime ()
-        {
-            auto now = std::chrono::system_clock::now();
-            auto nows = std::chrono::time_point_cast<std::chrono::seconds>(now);
+/**
+ * let's try to interpret a random user input string of characters. how fun. what could go wrong?
+ * 
+ * @brief Returns a command interpretation of the user cli input
+ * @param user The user input string of random characters
+ * 
+ * // pretty straight forward
+ * @return 0 for project management
+ * @return 1 for schedule management
+ * 
+ * // these will be tricky
+ * @return 2 for venting purposes (for random diary/journal entries; logged with timestamp)
+ * @return 3 for contemplating life descisions (use ai to write summaries of the diary; with random notable quotes?)
+ */
+int interpret(std::vector<std::string> user)
+{
+    /* just matching the user input to fixed commands won't help */
+    std::regex word ("\\w+");
+    // every string that the user may input
+    for(std::string value : user)
+    {
+        // gets split into seperate words
+        std::copy(
+            std::sregex_token_iterator(value.begin(),value.end(),word,0),
+            std::sregex_token_iterator(),
+            // and put out word for word
+            std::ostream_iterator<std::string>(std::cout, "\n")
+        );
+    }
+    // to do
+    return 0;
+}
 
-            // expand the stored time to seconds 
-            if(getTimePeriod)
-
-            std::cout << "it's been " << getTime() << getTimePeriod() << " since you started working on this" << std::endl;
-
-            return 0;
-        }
-        // stores the time
-        int setTime (unsigned long long value)
-        {
-            this->time=value;
-            std::cout << terminalColor(yellow,foreground,bright) << "updated some time" << terminal_reset;
-            return 0;
-        }
-        // returns the passed time
-        unsigned long long getTime ()
-        {
-            std::cout << terminalColor(yellow,foreground,bright) << "retrieved some time" << terminal_reset;
-            return this->time;
-        }
-        int setPeriod (timePeriod tp)
-        {
-            switch (tp)
-            {
-                case 0:
-                    break;
-            }
-            this->period = p;
-        }
-        std::string getTimePeriod ()
-        {
-            return this->period;
-        }
-    private:
-        std::string name;
-        unsigned long long time;// how much time has passed since the beginning. will hold the longest time spans only, i.e. days over hours, hours over minutes, ... to not store "20491203948414280984" seconds but the years passed (in this case. i doubt i'll be living for 20491203948414280984 more seconds though)
-        std::string period;
-};
-
-int project () {
+/**
+ *  @brief Workflow for handling project-access
+ */
+void project () {
     std::cout << cursive << terminalColor(cyan,foreground,normal) << "\nproject editing\n" << reset_cursive;
     std::cout << terminalColor(blue,foreground,normal) << "do you want to add, edit or finish a project?\n" << terminal_reset;
 
@@ -102,9 +87,46 @@ int project () {
     {
         std::cout << "\tyou actually finished something?";
     }
-
-    return 0;
 }
+
+/**
+ * run away
+ */
+void run() {
+    while(true){
+        if(!running) {
+        std::cout << "time left =" << std::endl;
+        std::this_thread::sleep_for(std::chrono::seconds(1)); 
+        std::cout << "5";
+        std::this_thread::sleep_for(std::chrono::seconds(1)); 
+        std::cout << "4";
+        std::this_thread::sleep_for(std::chrono::seconds(1)); 
+        std::cout << "3";
+        std::this_thread::sleep_for(std::chrono::seconds(1)); 
+        std::cout << "2";
+        std::this_thread::sleep_for(std::chrono::seconds(1)); 
+        std::cout << "1";
+        std::this_thread::sleep_for(std::chrono::seconds(1)); 
+        std::cout << "0";
+        running = false;
+        }
+    }
+};
+
+/**
+ * we're giving the user some time to put in multiple/seperate strings, until we assume he's done (and forcing the thread to return)
+ */
+std::vector<std::string> waitOnUser (std::vector<std::string> fetched)
+{
+    if(!waiting) return fetched;
+    running = true;
+    std::string something;
+    std::cin >> something;
+    fetched.push_back(something);
+    running = false;
+    return waitOnUser(fetched);
+}
+
 
 int main(int argc, char** argv)
 {
@@ -119,11 +141,38 @@ int main(int argc, char** argv)
         std::cout << terminalColor(yellow, foreground, normal) << std::endl << "Your current projects: \n";// this could indicate initial startup or new setup, but also: an error could've occured
     }
 
+    // await user prompt
     std::cout << terminal_reset << "Whats next? ";
-    std::string user;
-    std::cin >> user;
+    std::vector<std::string> user;
+
+    waiting = true;
+    std::thread r(run);
+    user = waitOnUser(user);
+    
 
     
+
+    
+    
+    
+
+    // we're impatiently waiting for the user to be done
+    // since we're slower the user has the chance to reset the timer
+    
+
+
+    
+    std::cout << "do we get here?\n";
+    
+
+    int i = interpret(user); // what does he want/mean?
+    /*
+    switch(i)
+    {
+        case 0:
+            project();
+    }
+    */
 
 
     std::cout << terminal_reset;
