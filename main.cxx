@@ -14,6 +14,7 @@
  */
 #include <iostream>
 #include <string>
+#include <regex>
 #include <chrono>
 #include <thread>
 #include <fstream>
@@ -65,6 +66,11 @@ enum color {
 enum brightness {
     normal,
     bright,
+};
+enum commands {
+    add,
+    edit,
+    remov,
 };
 
 /**
@@ -139,6 +145,42 @@ std::string terminalColor(color c, layer l, brightness b)
 }
 
 /**
+ * @brief Tries to match the input word to the closest available command
+ * @param word input word
+ * @return the closest command (that still makes sense)
+ */
+std::string normalize(std::string word)
+{
+    /*
+    // what additional endings could a word have?
+    //
+    // from: https://www.scholastic.com/content/dam/teachers/lesson-plans/migrated-files-in-body/prefixes_suffixes.pdf
+    enum suffixes {
+        able, ible,// doable, flexible
+        al, ial,// mental, denial
+        ed,// ended
+        en,// proven
+        er,// bigger (comparative)
+        er_1,// worker (one who does something)
+        est,// largest (superlative)
+        ful,// faithful
+        ic,// pathetic
+        ing,// doing
+        ion, tion, ation, ition,// action, companion, concatation, partition
+        ity, ty,// pity, witty
+        ive, ative, itive,// 
+    };
+    // what can we add in front of a word?
+    enum prefixes {
+
+    };
+    */
+    return "unfinished";
+}
+
+
+
+/**
  * @brief Main function
  * @param argc Number of passed Arguments
  * @param argv The arguments (argv[0] holds the name of the program)
@@ -152,7 +194,7 @@ int main(int argc, char** argv)
     std::cout << reset_cursive                      << terminalColor(red,foreground,normal)     << bold << "\tAvailable commands are: \n"           << color_reset << std::endl;
     std::cout << std::endl << "\t\tadd\t"           << terminalColor(black,foreground,normal)   << " (in order to add new \"to do\" entries)"       << color_reset << std::endl;
     std::cout << std::endl << "\t\tedit\t"          << terminalColor(black,foreground,normal)   << " (in order to edit some \"to do\" entries)"     << color_reset << std::endl;
-    std::cout << std::endl << "\t\tdelete\t"        << terminalColor(black,foreground,normal)   << " (in order to delete some \"to do\" entries)"   << color_reset << std::endl;
+    std::cout << std::endl << "\t\tremove\t"        << terminalColor(black,foreground,normal)   << " (in order to delete some \"to do\" entries)"   << color_reset << std::endl;
     std::cout << color_reset;
     // NEXT STEP IMPLEMENT THESE THREE FEATURES FIRST YOU LACK OF ATTENTION SPAN / MOTIVATON / DEDICATION
 
@@ -168,10 +210,13 @@ int main(int argc, char** argv)
     else {
         std::cout << terminalColor(yellow, background, normal) << std::endl << "seems like there's some stuff left over!";// this could indicate initial startup or new setup, but also: an error could've occured
     }
-    std::cout << terminalColor(white, foreground, normal) << std::endl << "what do you want to do? ";
+    std::cout << terminalColor(black, foreground, normal) << terminalColor(white, background, normal)  << "\nwhat do you want to do? " << terminalColor(cyan, foreground, normal);
     std::string response;
     std::cin >> response;
+
+    std::string res = normalize(response);
     // consider: spelling mistakes could happen
+
     
     // consider: entered to-do's will be linguistically adjusted for later ease of reading/understanding
     // include: a feedback like "non interpretable"
